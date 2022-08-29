@@ -1,5 +1,7 @@
 const urlAPI = 'https://mock-api.driven.com.br/api/v6/uol';
 
+let nome; // guardar o nome do usuário (login)
+
 function toggleMenu(){
     
     const menu = document.querySelector('.menu');
@@ -123,18 +125,43 @@ function renderizarMensagens(resposta){
 
 function carregarMensagens(resposta){
     console.log('BUSCANDO MENSAGENS');
-    const promise = axios.get(`${urlAPI}/messages`);
-    promise.then(renderizarMensagens);
+    if ( nome !== undefined){
+        const promise = axios.get(`${urlAPI}/messages`);
+        promise.then(renderizarMensagens);
+    }
 }
 
 function perguntarUsuario(){
-    const nome = prompt('Qual é o seu nome?');
+    nome = prompt('Qual é o seu nome?');
     // validações
 
     // ESCOPO LOCAL
     const promise = axios.post(`${urlAPI}/participants`, {name: nome});
     promise.then(carregarMensagens);
     promise.catch(erroLogin);
+}
+
+function manterLogado(){
+    console.log('STATUS');
+    if ( nome !== undefined ){
+        axios.post(`${urlAPI}/status`, {name: nome});
+    }
+}
+
+function enviarMensagem(){
+
+    const elementoMensagem = document.querySelector('.entrada-mensagem input');
+    // verificações
+
+    const promise = axios.post(`${urlAPI}/messages`,{
+        from: nome, // var. global 
+        to: "Todos",
+        text: elementoMensagem.value,
+        type: "message" // ou "private_message" para o bônus
+    });
+
+    promise.then(carregarMensagens);
+
 }
 
 // ponto de entrada da aplicação
@@ -144,6 +171,9 @@ function entrarChat(){
     carregarParticipantes();
 
     perguntarUsuario();
+
+    setInterval(carregarMensagens, 3000);
+    setInterval(manterLogado, 5000);
 
 }
 entrarChat();
